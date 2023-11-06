@@ -1,26 +1,29 @@
 package org.firstinspires.ftc.teamcode.autonPackage;
 
-import static java.lang.Math.ceil;
-
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
-import java.time.LocalTime;
+import org.firstinspires.ftc.teamcode.autonPackage.IK.FABRIK;
+import org.firstinspires.ftc.teamcode.autonPackage.IK.Joint;
+import org.firstinspires.ftc.teamcode.autonPackage.IK.Vector2;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @TeleOp(name="Drive Tank", group="Exercises")
 //@Disabled
 public class DriveTank extends LinearOpMode
 {
-    DcMotor clawRotate,leftMotor, rightMotor, armMotor1;
+    DcMotor clawRotate,leftMotor, rightMotor, armMotor2;
+    DcMotor armMotor1L, armMotor1R; // when looking from behind the bot
     Servo  clawGrabL, clawGrabR;
     float   leftY, rightY;
     boolean   clawGrabState;
     boolean   prevClawGrapState;
-    float baseArmPower = -0.25f;
+    double baseArmPower = -0.30;
     boolean prevdPad2_down, prevdPad2_up;
     // called when init button is  pressed
     @Override
@@ -28,8 +31,19 @@ public class DriveTank extends LinearOpMode
     {
         leftMotor = hardwareMap.dcMotor.get("motorLeft");
         rightMotor = hardwareMap.dcMotor.get("motorRight");
-        armMotor1 = hardwareMap.dcMotor.get("armMotor1");
+
         clawRotate = hardwareMap.dcMotor.get("clawRotate");
+
+        armMotor1L = hardwareMap.dcMotor.get("armMotor1L");
+        armMotor1R = hardwareMap.dcMotor.get("armMotor1R");
+        armMotor2 = hardwareMap.dcMotor.get("armMotor1");
+
+
+
+//        armMotor1L.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER); // resets encoders
+//        armMotor1R.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+//        armMotor2.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+
 
 
         //clawRotate = hardwareMap.servo.get("clawRotate");
@@ -42,12 +56,30 @@ public class DriveTank extends LinearOpMode
         clawGrabL.setDirection(Servo.Direction.FORWARD);
         clawGrabR.setDirection(Servo.Direction.REVERSE); // other side so reverse direction
 
+
+
         telemetry.addData("Mode", "waiting");
         telemetry.update();
 
         // wait for start button.
 
+//        List<Joint> joints = new ArrayList<Joint>();
+//        List<Double> armLengths = new ArrayList<Double>();
+//        Joint start = new Joint(), mid = new Joint(), end = new Joint();
+//        start.location = new Vector2(0.0, 0.0); // always 0, 0
+//        mid.location = new Vector2(0.0, 0.0e); // TODO: set to the starting location
+//        end.location = new Vector2(0.0, 0.0e); // TODO: set to the starting location
+//
+//        armLengths.add(0.0e); // arm part 1 TODO: measure arm and set to correct length
+//        armLengths.add(0.0e); // arm part 2 TODO: measure arm and set to correct length
+//        FABRIK IK = new FABRIK(joints, armLengths);
+        Vector2 endPosition = new Vector2(0.0, 0.0); // TODO: set correct end position
         waitForStart();
+
+//        armMotor1L.setMode(DcMotor.RunMode.RUN_TO_POSITION); // sets encoders to go to a specific tick TODO: test the ticks per motor
+//        armMotor1R.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+//        armMotor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+
         long last_time = System.nanoTime();
 
 
@@ -58,19 +90,19 @@ public class DriveTank extends LinearOpMode
 
             //double deltaTime;
             long time = System.nanoTime();
-            double deltaTime = (int) ((time - last_time) / 1000000) / 1000;
+            double deltaTime = ((time - last_time) / 1000000) / 1000;
             last_time = time;
 
             float forward = gamepad1.left_stick_y;
             float LOR = gamepad1.right_stick_x;
-            float armRot ;
+            double armV, armH ;
 
 
             float armPower = 0.40f;
 
             float clawRotPower = 0.35f; // does not actually change the power to the servo, just in programming the values sent
             float clawRot = 0.0f; // actual rotation per call
-            float power = 0.7f;
+            float power = 0.6f;
 
             clawRot = (gamepad1.left_trigger - gamepad1.right_trigger * clawRotPower);
 
@@ -79,18 +111,16 @@ public class DriveTank extends LinearOpMode
                 power = 1.0f; // if gamepad1 b is down then speed
             } else if(gamepad1.a) {
                 power = 0.3f; // if gamepad1 a is up then slow
-            } else {
-                power = 0.7f; // if none then normal
             }
-
 //            if (gamepad1.dpad_down) { // arm rotation
-//                armRot = armPower; // if dpad1 is down then rotate [a direction]
+//                armV = armPower; // if dpad1 is down then rotate [a direction]
 //            } else if(gamepad1.dpad_up) {
-//                armRot = -armPower; // if dpad1 is up then rotate [a direction]
+//                armV = -armPower; // if dpad1 is up then rotate [a direction]
 //            } else {
-//                armRot = 0.0f; // if dpad1 is not up or down then do nothing [might want to add a small amount of back just in case. also add a locking mechanism for power]
+//                armV = 0.0f; // if dpad1 is not up or down then do nothing [might want to add a small amount of back just in case. also add a locking mechanism for power]
 //            }
-            armRot = (gamepad2.left_stick_y * armPower) + baseArmPower;
+            armV = (gamepad2.left_stick_y * armPower) + baseArmPower; // up/down
+            armH = (gamepad2.right_stick_y * armPower) + baseArmPower; // forward/backward
             if (gamepad1.x) {
                 clawGrabState = true;
             }
@@ -111,12 +141,12 @@ public class DriveTank extends LinearOpMode
 
             leftY = (float)(forward * power * (LOR +1)); // power for the left motor(s); again, instead of -forward, we are just reversing the motor direction
             rightY = (float)(forward * power * (-LOR + 1)); // power for the right motor(s)
-            armMotor1.setPower(Range.clip(armRot, -1.0, 1.0));
+            armMotor2.setPower(Range.clip(armV, -1.0, 1.0));
             leftMotor.setPower(Range.clip(leftY, -1.0, 1.0)); // again, instead of -forward, we are just reversing the motor direction
             rightMotor.setPower(Range.clip(rightY, -1.0, 1.0));
 
             telemetry.addData("Mode", "running");
-            telemetry.addData("sticks", "  left: " + leftY + "  right: " + rightY + "  armPower: " + armRot);
+            telemetry.addData("sticks", "  left: " + leftY + "  right: " + rightY + "  armPower: " + armV);
             telemetry.addData("powers", "baseArm: " + baseArmPower + "  servo's spot: " + clawGrabState + "  test: " + deltaTime);
             telemetry.update();
 
