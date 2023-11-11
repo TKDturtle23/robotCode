@@ -1,11 +1,16 @@
 package org.firstinspires.ftc.teamcode.autonPackage.IK;
 import java.util.List;
 public class FABRIK {
-    double angleBTP(Vector2 p1, Vector2 p2) {
+
+    public double angleBTP(Vector2 p1, Vector2 p2) {
 
         // tan-1 opposite over adjacent (by-ay)/(bx-ax
+        double angle = Math.atan((p2.e1 - p1.e1) / (p2.e0 - p1.e0));
+        if (angle < 0) {
+            return Math.abs(angle ) + 180;
+        }
+        return angle;
 
-        return Math.atan((p2.e1 - p1.e1) / (p2.e0 - p1.e0));
     }
     public FABRIK(List<Joint> iJoints, List<Double> iLengths) {
 
@@ -14,22 +19,22 @@ public class FABRIK {
         Ldistances = iLengths;
     }
 
-    List<Joint> LJoints;
-    List<Double> Ldistances;
+    public List<Joint> LJoints;
+    public List<Double> Ldistances;
 
-    Vector2 findDistance(Vector2 v1, Vector2 v2) {
+    public Vector2 findDistance(Vector2 v1, Vector2 v2) {
         return new Vector2(v2.e0 - v1.e0, v2.e1 - v1.e1);
         //double distance =  Math.sqrt(Math.pow(vDistance.e0, 2) + Math.pow(vDistance.e1, 2));
     }
-    void setJListFromArr(List<Joint> list, Joint[] objects) {
+    public void setJListFromArr(List<Joint> list, Joint[] objects) {
         for (int i = 0; i < objects.length; i++) {
             list.set(i, objects[i]);
         }
     }
-    double pTheorem(Vector2 v) {
+    public double pTheorem(Vector2 v) {
         return Math.sqrt(Math.pow(v.e0, 2) + Math.pow(v.e1, 2));
     }
-    List<Joint> IK(Vector2 startLocation, Vector2 endLocation, long maxIterations, double tolerance) {
+    public List<Joint> IK(Vector2 startLocation, Vector2 endLocation, long maxIterations, double tolerance) {
         Joint[] Joints = LJoints.toArray(new Joint[LJoints.size()]);
         Double[] distances = Ldistances.toArray(new Double[Ldistances.size()]);
 
