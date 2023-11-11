@@ -75,9 +75,9 @@ public class DriveTank extends LinearOpMode
 
         armMotor1L = hardwareMap.get(DcMotorEx.class,"armMotor1L");
         armMotor1R = hardwareMap.get(DcMotorEx.class,"armMotor1R");
+        armMotor2 = hardwareMap.get(DcMotorEx.class,"armMotor2");
         armMotor1L.setDirection(DcMotor.Direction.FORWARD); // resets encoders
         armMotor1R.setDirection(DcMotor.Direction.FORWARD);
-        armMotor2 = hardwareMap.get(DcMotorEx.class,"armMotor1");
         armMotor2.setDirection(DcMotor.Direction.REVERSE);
 
 
@@ -126,9 +126,9 @@ public class DriveTank extends LinearOpMode
 
 
 
-        armMotor1L.setMode(DcMotor.RunMode.RUN_TO_POSITION); // sets encoders to go to a specific tick TODO: test the ticks per motor
-        armMotor1R.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        armMotor2.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        armMotor1L.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER); // sets encoders to go to a specific tick TODO: test the ticks per motor
+        armMotor1R.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        armMotor2.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
         armMotor1L.setVelocity(100); // sets encoders to go to a specific tick TODO: test the ticks per motor
         armMotor1R.setVelocity(100);
@@ -178,10 +178,10 @@ public class DriveTank extends LinearOpMode
             rightY = (float)(forward * power * (-LOR + 1)); // power for the right motor(s)
 
 
-            endPosition.e1 += (gamepad2.left_stick_y * armPower) * deltaTime; // up/down
-            endPosition.e0 += (gamepad2.right_stick_y * armPower) * deltaTime; // forward/backward
+            //endPosition.e1 += (gamepad2.left_stick_y * armPower) * deltaTime; // up/down
+            //endPosition.e0 += (gamepad2.right_stick_y * armPower) * deltaTime; // forward/backward
 
-            joints = IK.IK(new Vector2(0.0, 0.0), endPosition, 5000L, 0.001);
+            //joints = IK.IK(new Vector2(0.0, 0.0), endPosition, 5000L, 0.001);
 
             clawRotate.setPower(Range.clip(clawRot, -1.0f, 1.0f));
             //if (clawGrabState != prevClawGrapState) { // claw grab
@@ -190,26 +190,23 @@ public class DriveTank extends LinearOpMode
             //}
 
 
-            int R, I;
-            int L;
-            L = degToTicksBase(angleBTP(new Vector2(1.0, 0.0), joints.get(1).location));
-            R = L;
-
-            I = degToTicksHD25(angleBTP (new Vector2(1.0, 0.0), joints.get(2).location.subtract ( joints.get(1).location ) ));
-            armMotor1L.setTargetPosition(L);
-            armMotor1R.setTargetPosition(R);
-            armMotor2.setTargetPosition(I);
+//            int R, I;
+//            int L;
+//            L = degToTicksBase(angleBTP(new Vector2(1.0, 0.0), joints.get(1).location));
+//            R = L;
+//
+//            I = degToTicksHD25(angleBTP (new Vector2(1.0, 0.0), joints.get(2).location.subtract ( joints.get(1).location ) ));
+            armMotor1L.setPower(Range.clip(gamepad2.left_stick_y * 0.5, 0.0f, 1.0f));
+            armMotor1R.setPower(Range.clip(gamepad2.left_stick_y * 0.5, 0.0f, 1.0f));
+            armMotor2.setPower(Range.clip(gamepad2.right_stick_y * 0.5, 0.0f, 1.0f));
 
             //armMotor2.setPower(Range.clip(armV, -1.0, 1.0));
             leftMotor.setPower(Range.clip(leftY, -1.0, 1.0)); // again, instead of -forward, we are just reversing the motor direction
             rightMotor.setPower(Range.clip(rightY, -1.0, 1.0));
 
             telemetry.addData("Mode", "running");
-            telemetry.addData("Joint Rotations", "Left base: " + L + "  right base: " + R + "  middle: " + I);
-            telemetry.addData("joint1: ", round(joints.get(0).location.e0, 2) +  " " + round(joints.get(0).location.e1, 2));
-            telemetry.addData("joint2: ", round(joints.get(1).location.e0, 2) +  " " + round(joints.get(1).location.e1, 2));
-            telemetry.addData("joint3: ", round(joints.get(2).location.e0, 2) +  " " + round(joints.get(2).location.e1, 2));
-            telemetry.update();
+            telemetry.addData("Joint ticks", "1L: " + armMotor1L.getCurrentPosition() + " 1R: " + armMotor1R.getCurrentPosition() + " Middle: " + armMotor2.getCurrentPosition());
+            telemetry.update()
 
 
             prevdPad2_down = gamepad2.dpad_down; // updating previous inputs
