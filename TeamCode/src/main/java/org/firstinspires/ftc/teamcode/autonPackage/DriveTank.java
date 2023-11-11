@@ -4,15 +4,15 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.teamcode.autonPackage.IK.FABRIK;
 import org.firstinspires.ftc.teamcode.autonPackage.IK.Joint;
 import org.firstinspires.ftc.teamcode.autonPackage.IK.Vector2;
-import org.firstinspires.ftc.teamcode.autonPackage.IK.degToTicks;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,8 +48,8 @@ public class DriveTank extends LinearOpMode
         return (int)Math.floor(280.0 * (degrees / 360));
         //return 0;
     }
-    public int degToTicksHD40(double degrees) {
-        throw new RuntimeException("GET THE TICKS"); // TODO: GET THE TICKS
+    public int degToTicksBase(double degrees) {
+        throw new RuntimeException("GET THE TICKS FOR Base"); // TODO: GET THE TICKS
         //return 0;
     }
         public static double angleBTP(Vector2 p1, Vector2 p2) {
@@ -58,7 +58,13 @@ public class DriveTank extends LinearOpMode
 
             return Math.acos(res) * 180 / 3.14159265358979323846264338327950288419716939937510; // acos returns radians so converting to degrees
         }
+    public static double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
 
+        BigDecimal bd = BigDecimal.valueOf(value);
+        bd = bd.setScale(places, RoundingMode.HALF_UP);
+        return bd.doubleValue();
+    }
     @Override
     public void runOpMode() throws InterruptedException
     {
@@ -135,45 +141,45 @@ public class DriveTank extends LinearOpMode
 
         while (opModeIsActive())
         {
-
             //double deltaTime;
             long time = System.nanoTime();
+
             double deltaTime = ((double)(time - last_time) / 1000000.0) / 1000.0;
+
             last_time = time;
-
-            float forward = gamepad1.left_stick_y;
-            float LOR = gamepad1.right_stick_x;
             double armV, armH ;
-
-
+             // controls
             float armPower = 0.40f;
-
-            float clawRotPower = 0.35f; // does not actually change the power to the servo, just in programming the values sent
-            float clawRot = 0.0f; // actual rotation per call
             float power = 0.6f;
+                // controller 1
+                    float forward = gamepad1.left_stick_y;
+                    float LOR = gamepad1.right_stick_x; // left/right
+                    if (gamepad1.b) { // movement speed control
+                        power = 1.0f; // if gamepad1 b is down then speed
+                    } else if(gamepad1.a) {
+                        power = 0.3f; // if gamepad1 a is up then slow
+                    }
+                //controller 2
+                    float clawRotPower = 0.35f; // does not actually change the power to the servo, just in programming the values sent
+                    float clawRot = (gamepad2.left_trigger - gamepad2.right_trigger * clawRotPower);
+                    armV = (gamepad2.left_stick_y * armPower) + baseArmPower; // up/down
+                    armH = (gamepad2.right_stick_y * armPower) + baseArmPower; // forward/backward
+                    if (gamepad2.x) {
+                        clawGrabState = true;
+                    }
+                    if (gamepad2.y) {
+                        clawGrabState = false;
+                    }
 
-            clawRot = (gamepad1.left_trigger - gamepad1.right_trigger * clawRotPower);
 
 
-            if (gamepad1.b) { // movement speed control
-                power = 1.0f; // if gamepad1 b is down then speed
-            } else if(gamepad1.a) {
-                power = 0.3f; // if gamepad1 a is up then slow
-            }
+
+            leftY = (float)(forward * power * (LOR +1)); // power for the left motor(s); again, instead of -forward, we are just reversing the motor direction
+            rightY = (float)(forward * power * (-LOR + 1)); // power for the right motor(s)
+
 
             endPosition.e1 += (gamepad2.left_stick_y * armPower) * deltaTime; // up/down
             endPosition.e0 += (gamepad2.right_stick_y * armPower) * deltaTime; // forward/backward
-            if (gamepad1.x) {
-                clawGrabState = true;
-            }
-            if (gamepad1.y) {
-                clawGrabState = false;
-            }
-            if (gamepad2.dpad_up && baseArmPower >= -0.60f ) {
-                baseArmPower -= 0.05f * deltaTime;
-            } else if (gamepad2.dpad_down && baseArmPower <= 0.40f ) {
-                baseArmPower += 0.05f * deltaTime;
-            }
 
             joints = IK.IK(new Vector2(0.0, 0.0), endPosition, 5000L, 0.001);
 
@@ -182,14 +188,11 @@ public class DriveTank extends LinearOpMode
             clawGrabL.setPosition(Range.clip((clawGrabState?0.57:0.0), 0.1f, 1.0f) );
             clawGrabR.setPosition(Range.clip(clawGrabState?0.52:0.0, 0.1f, 1.0f));
             //}
-            degToTicks t = new degToTicks();
 
-            leftY = (float)(forward * power * (LOR +1)); // power for the left motor(s); again, instead of -forward, we are just reversing the motor direction
-            rightY = (float)(forward * power * (-LOR + 1)); // power for the right motor(s)
 
             int R, I;
             int L;
-            L = degToTicksHD40(angleBTP(new Vector2(1.0, 0.0), joints.get(1).location));
+            L = degToTicksBase(angleBTP(new Vector2(1.0, 0.0), joints.get(1).location));
             R = L;
 
             I = degToTicksHD25(angleBTP (new Vector2(1.0, 0.0), joints.get(2).location.subtract ( joints.get(1).location ) ));
@@ -202,11 +205,10 @@ public class DriveTank extends LinearOpMode
             rightMotor.setPower(Range.clip(rightY, -1.0, 1.0));
 
             telemetry.addData("Mode", "running");
-            //telemetry.addData("sticks", "  left: " + leftY + "  right: " + rightY + "  armPower: " + armV);
-            telemetry.addData("powers", "baseArm: " + L + "  servo's spot: " + R + "  test: " + I);
-            telemetry.addData("joint1: ", (angleBTP(joints.get(0).location, joints.get(1).location) / 360.0) +  " " + joints.get(0).location.e1);
-            telemetry.addData("joint2: ", joints.get(1).location.e0 +  " " + joints.get(1).location.e1);
-            telemetry.addData("joint3: ", joints.get(2).location.e0 +  " " + joints.get(2).location.e1);
+            telemetry.addData("Joint Rotations", "Left base: " + L + "  right base: " + R + "  middle: " + I);
+            telemetry.addData("joint1: ", round(joints.get(0).location.e0, 2) +  " " + round(joints.get(0).location.e1, 2));
+            telemetry.addData("joint2: ", round(joints.get(1).location.e0, 2) +  " " + round(joints.get(1).location.e1, 2));
+            telemetry.addData("joint3: ", round(joints.get(2).location.e0, 2) +  " " + round(joints.get(2).location.e1, 2));
             telemetry.update();
 
 
