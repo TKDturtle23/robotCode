@@ -75,8 +75,8 @@ public class DriveTank extends LinearOpMode
 
         armMotor1L = hardwareMap.get(DcMotorEx.class,"armMotor1L");
         armMotor1R = hardwareMap.get(DcMotorEx.class,"armMotor1R");
-        armMotor1L.setDirection(DcMotor.Direction.FORWARD); // resets encoders
-        armMotor1R.setDirection(DcMotor.Direction.FORWARD);
+        armMotor1L.setDirection(DcMotor.Direction.REVERSE); // resets encoders
+        armMotor1R.setDirection(DcMotor.Direction.REVERSE);
         armMotor2 = hardwareMap.get(DcMotorEx.class,"armMotor1");
         armMotor2.setDirection(DcMotor.Direction.REVERSE);
 
