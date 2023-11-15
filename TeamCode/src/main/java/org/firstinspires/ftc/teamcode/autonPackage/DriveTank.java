@@ -112,8 +112,8 @@ public class DriveTank extends LinearOpMode
         List<Double> armLengths = new ArrayList<Double>();
         Joint start = new Joint(), mid = new Joint(), end = new Joint();
         start.location = new Vector2(0.0, 0.0); // always 0, 0
-        mid.location = new Vector2(11.0, 0.0); // TODO: set to the starting location
-        end.location = new Vector2(26.0, 0.0); // TODO: set to the starting location
+        mid.location = new Vector2(10.9, 0.1); // TODO: set to the starting location
+        end.location = new Vector2(24.9999.0, 0.0001); // TODO: set to the starting location
         joints.add(start);
         joints.add(mid);
         joints.add(end);
@@ -121,7 +121,7 @@ public class DriveTank extends LinearOpMode
         armLengths.add(11.0); // arm part 1 TODO: measure arm and set to correct length
         armLengths.add(15.0); // arm part 2 TODO: measure arm and set to correct length
         FABRIK IK = new FABRIK(joints, armLengths);
-        Vector2 endPosition = new Vector2(25.0, 0.0); // TODO: set correct end position
+        Vector2 endPosition = new Vector2(24.9, 0.0); // TODO: set correct end position
         waitForStart();
 
 
