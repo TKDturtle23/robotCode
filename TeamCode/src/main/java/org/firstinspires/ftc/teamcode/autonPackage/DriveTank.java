@@ -49,8 +49,11 @@ public class DriveTank extends LinearOpMode
         //return 0;
     }
     public int degToTicksBase(double degrees) {
-        throw new RuntimeException("GET THE TICKS FOR Base"); // TODO: GET THE TICKS
-        //return 0;
+       if (degrees == 0) {
+            return 0;
+        }
+        double NDegrees = degrees / 360;
+        return (int)Math.floor(450.0 * (degrees / 360));
     }
         public static double angleBTP(Vector2 p1, Vector2 p2) {
             double dot = (p1.e0 * p2.e0) + (p2.e1 * p1.e1);
@@ -149,7 +152,7 @@ public class DriveTank extends LinearOpMode
             last_time = time;
             double armV, armH ;
              // controls
-            float armPower = 0.40f;
+            float armPower = 1.0f;
             float power = 0.6f;
                 // controller 1
                     float forward = gamepad1.left_stick_y;
@@ -162,8 +165,7 @@ public class DriveTank extends LinearOpMode
                 //controller 2
                     float clawRotPower = 0.35f; // does not actually change the power to the servo, just in programming the values sent
                     float clawRot = (gamepad2.left_trigger - gamepad2.right_trigger * clawRotPower);
-                    armV = (gamepad2.left_stick_y * armPower) + baseArmPower; // up/down
-                    armH = (gamepad2.right_stick_y * armPower) + baseArmPower; // forward/backward
+                  
                     if (gamepad2.x) {
                         clawGrabState = true;
                     }
