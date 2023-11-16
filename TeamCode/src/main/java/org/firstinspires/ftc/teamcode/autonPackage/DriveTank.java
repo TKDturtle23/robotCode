@@ -173,8 +173,8 @@ public class DriveTank extends LinearOpMode
 
 
 
-            endPosition.e1 += (armForward * armPower) * deltaTime; // up/down
-            endPosition.e0 += (armUp * armPower) * deltaTime; // forward/backward
+            endPosition.e1 += (armUp * armPower) * deltaTime; // up/down
+            endPosition.e0 += (armForward * armPower) * deltaTime; // forward/backward
             joints = IK.IK(new Vector2(0.0, 0.0), endPosition, 5000L, 0.001);
             clawRotate.setPower(Range.clip(clawRot, -1.0f, 1.0f));
             clawGrabL.setPosition(Range.clip(clawGrabState?0.57:0.0, 0.1f, 1.0f));
